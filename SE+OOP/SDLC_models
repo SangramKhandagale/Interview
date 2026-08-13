@@ -1,0 +1,63 @@
+🏗️ The Big Picture First
+
+Imagine you're building a house. There are different styles of building it:
+
+Plan EVERYTHING on paper first, then build without changing anything → Waterfall
+Build a small part, show the client, adjust, build more, adjust again → Agile
+Build a risky prototype first, test it, THEN commit to the full plan → Spiral
+
+That's literally it. Everything else is just details. Let's go one by one.
+
+1️⃣ Waterfall — "The One-Shot Model" 🌊
+
+Analogy: Imagine writing an exam where you're NOT allowed to go back and change a previous answer once you move to the next question. That's Waterfall. You go: Requirements → Design → Development → Testing → Deployment → Maintenance, in strict order, one phase fully finishes before the next starts.
+
+Why it's called "Waterfall" 💧 — water falls down, it doesn't flow back up. Once you're in the Testing phase, you can't just casually hop back to Requirements because "oh wait, client wants something different now."
+
+When it's actually used:
+
+Projects where requirements are 100% clear and NOT going to change (government projects, banking systems, embedded/hardware-linked software)
+When documentation and predictability matter more than speed
+
+The problem 😬: Real world clients change their mind ALL the time. If they realize in the testing phase that they wanted a different feature, you're kind of screwed — going back is expensive and painful.
+
+🎤 Interview one-liner: "Waterfall is a linear, sequential model best suited for projects with fixed, well-understood requirements where change is unlikely — like safety-critical or compliance-heavy systems."
+
+2️⃣ Agile — "The Build-Show-Adjust Model" 🔄
+
+Analogy: This is literally how you built your projects, bro. Think about ThriveHer — you didn't design the ENTIRE platform on paper first and then code it in one long stretch, right? You probably built the job-search feature, tested it, tweaked it, then moved to the resume builder, tested that... That's Agile in real life.
+
+How it works: Break the project into small chunks called sprints (usually 1-4 weeks). At the end of each sprint, you have a working (small) piece of the product. You show it, get feedback, adjust, then do the next sprint.
+
+Why teams love it:
+
+Requirements CAN change mid-project without blowing everything up
+Client sees progress constantly, not just at the very end
+Bugs/issues get caught early instead of at the end (like Waterfall)
+
+When it's used: Startups, product companies, literally anywhere requirements evolve — which is basically 90% of modern software (yes, including product-based companies you're targeting 👀)
+
+🎤 Interview one-liner: "Agile is an iterative model that delivers work in small increments called sprints, allowing continuous feedback and flexibility — ideal for projects with evolving requirements, which is most modern product development."
+
+3️⃣ Spiral — "The Paranoid-But-Smart Model" 🌀
+
+Analogy: Imagine you're about to invest money in a risky startup idea. You wouldn't just dump ALL your savings in immediately, right? You'd first build a tiny prototype, test if people even want it, THEN invest more, test again, invest more... That spiral of "build a bit → assess risk → build more" is literally the Spiral model.
+
+How it works: It combines Waterfall's structure + Agile's iteration, but with a HEAVY focus on risk analysis at every loop. Each "loop" of the spiral = Plan → Identify & analyze risk → Build & test a prototype → Review with client → repeat, going a bit further each time.
+
+When it's used: Large, expensive, high-risk projects — think NASA software, large-scale enterprise systems, anything where a mistake costs millions. It's rarely used for small startup apps because it's expensive and slow (all that risk analysis takes time and money).
+
+🎤 Interview one-liner: "Spiral is a risk-driven model that combines iterative development with systematic risk assessment at each cycle — used for large, high-risk, high-cost projects where failure is very expensive."
+
+🥊 Quick Comparison (the table you'll actually remember)
+	Waterfall	Agile	Spiral
+Flexibility	❌ None	✅ High	🟡 Medium
+Risk focus	❌ Low	🟡 Medium	✅ Very high
+Speed to see results	🐌 Slow (end only)	⚡ Fast (every sprint)	🐌 Slow (planning heavy)
+Best for	Fixed, clear requirements	Evolving requirements	Large, risky, expensive projects
+Real example	Government tender software	Your ThriveHer/Samadhan builds	NASA, big banking core systems
+🙋 The question they WILL ask you next:
+
+"Which one did you use in your projects?"
+
+Your honest answer: Agile (or more specifically, "Agile-ish" — most self/intern projects informally follow sprints without calling it formally "Scrum"). Say something like: "I followed an Agile-style approach — building features incrementally, testing them, and iterating based on what worked, rather than planning the entire architecture upfront." That's true AND it sounds sharp.
