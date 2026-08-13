@@ -1,0 +1,56 @@
+4️⃣ Polymorphism — "Same Name, Different Behavior" 🎪
+
+The idea: "Poly" = many, "morph" = forms. The SAME method name behaves DIFFERENTLY depending on the object calling it. Two types:
+
+Compile-time (Method Overloading) — same method name, different parameters
+Runtime (Method Overriding) — child class provides its OWN version of a parent's method
+
+Real analogy: Press "brake" 🛑 — on a bicycle, you squeeze a lever. On a car, you press a pedal. On a plane, you deploy reverse thrusters. Same ACTION ("brake"), completely different execution depending on the vehicle. That's polymorphism.
+
+java
+// Parent class
+class Animal {
+    void makeSound() {
+        System.out.println("Some generic animal sound... 🐾");
+    }
+}
+
+// Child classes OVERRIDE makeSound() differently
+class Dog extends Animal {
+    @Override
+    void makeSound() {
+        System.out.println("Woof Woof! 🐶");
+    }
+}
+
+class Cat extends Animal {
+    @Override
+    void makeSound() {
+        System.out.println("Meow! 🐱");
+    }
+}
+
+// THE MAGIC 🪄 — Runtime Polymorphism
+Animal myPet = new Dog();
+myPet.makeSound(); // prints "Woof Woof!" — even though the variable type is "Animal"!
+
+myPet = new Cat();
+myPet.makeSound(); // now prints "Meow!" — SAME line of code, different behavior!
+
+Look at that last part carefully 👀 — myPet.makeSound() is the EXACT same line of code, but it behaves differently depending on WHAT object myPet actually is at runtime. That's the magic of polymorphism — Java figures out at runtime which version to call. 🔥
+
+Bonus — Method Overloading (compile-time polymorphism), quick example:
+
+java
+class Calculator {
+    int add(int a, int b) {
+        return a + b;
+    }
+    double add(double a, double b) { // same name "add", different params
+        return a + b;
+    }
+}
+
+Same method name add, but Java decides WHICH one to run based on the arguments you pass. That's overloading.
+
+🎤 One-liner: "Polymorphism allows the same method to behave differently based on the object calling it — achieved through method overriding (runtime) or overloading (compile-time)."

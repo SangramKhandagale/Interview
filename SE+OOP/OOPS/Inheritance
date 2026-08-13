@@ -1,0 +1,34 @@
+3️⃣ Inheritance — "Like Father, Like Son" 🧬
+
+The idea: A class (child/subclass) can inherit properties and methods from another class (parent/superclass), so you don't repeat code. Use the extends keyword.
+
+Real analogy: You inherited your dad's surname and maybe his height, but you ALSO have your own unique traits (maybe you code, he doesn't 😂). That's inheritance — you get the base stuff for free, plus you can add your own.
+
+java
+// Parent class
+class Vehicle {
+    String brand;
+
+    void start() {
+        System.out.println(brand + " is starting... 🔑");
+    }
+}
+
+// Child class — inherits everything from Vehicle
+class Car extends Vehicle {
+    int numberOfDoors;
+
+    void honk() {
+        System.out.println(brand + " says Beep Beep! 📯");
+    }
+}
+
+// Usage
+Car myCar = new Car();
+myCar.brand = "Tesla";
+myCar.start();  // ✅ inherited from Vehicle — didn't have to rewrite this!
+myCar.honk();   // ✅ Car's own method
+
+Car got start() for FREE without writing it again — that's the whole point of inheritance: code reusability. Why write the same start() logic in every vehicle type (Car, Bike, Truck) when they can all just inherit it from Vehicle? 🙌
+
+🎤 One-liner: "Inheritance allows a class to acquire properties and behaviors of another class, promoting code reusability and establishing an IS-A relationship — a Car IS-A Vehicle."

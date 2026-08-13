@@ -1,0 +1,34 @@
+2️⃣ Abstraction — "You Don't Need to Know HOW, Just WHAT" 🎭
+
+The idea: Hide the COMPLEX implementation details, show only the essential features. This is done using abstract classes or interfaces.
+
+Real analogy: When you use your phone's camera app 📸, you press ONE button "capture." You have ZERO idea about the sensor algorithms, image processing pipelines, autofocus math happening behind that button. You don't need to! That's abstraction — complexity hidden, simple interface exposed.
+
+🔥 Simplest Abstraction Example
+abstract class Animal {
+    abstract void sound();
+}
+
+class Dog extends Animal {
+    void sound() {
+        System.out.println("Dog barks");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Dog d = new Dog();
+        d.sound();
+    }
+}
+🧠 How to explain it to the interviewer
+
+Say:
+
+"Abstraction means hiding the implementation details and showing only the required functionality. Here, the Animal class only says that every animal should have a sound() method, but it doesn't tell how the sound is made. The Dog class provides the actual implementation by printing 'Dog barks'."
+⚠️ Encapsulation vs Abstraction — the #1 confusion:
+
+Encapsulation = HIDING data (the "how it's protected") 🔒
+Abstraction = HIDING complexity (the "how it's simplified") 🎭
+
+Say this in interviews and you'll sound sharp: "Encapsulation is about data hiding for security/control, abstraction is about hiding implementation complexity to simplify usage."
