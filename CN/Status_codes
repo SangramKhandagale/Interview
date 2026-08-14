@@ -1,0 +1,79 @@
+🎯 The Big Picture — 5 Categories
+
+Think of status codes like traffic signals with a first digit that tells you the VIBE immediately:
+
+Starts with	Meaning	Vibe
+1xx	Informational	"Hold on, processing..." 🤔
+2xx	Success ✅	"All good, here you go!" 😊
+3xx	Redirection ↪️	"It moved, go over there instead" 🚶
+4xx	Client Error 🙅	"YOU messed up the request"
+5xx	Server Error 💥	"WE messed up, not your fault"
+
+Golden rule: 4xx = your problem, 5xx = server's problem. Never mix these up in an interview 😅
+
+✅ 2xx — Success Family
+200 OK 👍
+
+"Here's exactly what you asked for."
+
+The most common one. GET request worked, here's your data.
+
+201 Created 🎉
+
+"New thing successfully created!"
+
+Used after a successful POST — you asked to create something (a new user, new post), and it worked.
+
+POST /users → 201 Created (new user was made!)
+GET /users/101 → 200 OK (just fetched existing data)
+
+Notice: POST that creates something = 201, not 200! Common interview gotcha. 😉
+
+↪️ 3xx — Redirection Family
+301 Moved Permanently 📦
+
+"This address doesn't exist anymore, we PERMANENTLY moved. Update your bookmarks!"
+
+Used when a URL has permanently changed (like your gf changing her house address forever — stop mailing the old one 😂).
+
+yoursite.com/old-page → 301 → yoursite.com/new-page
+
+Browsers/search engines remember this and automatically use the new URL next time.
+
+🙅 4xx — Client Error Family (YOUR fault)
+400 Bad Request ❌
+
+"Bro what even IS this request? I can't even understand it."
+
+You sent malformed data — broken JSON, missing required fields, wrong data type.
+
+POST /users  Body: { name: }  ← broken syntax → 400
+401 Unauthorized 🔐
+
+"Who ARE you? I don't even know you. Log in first."
+
+You're NOT authenticated — no valid login/token provided at all.
+
+403 Forbidden 🚫
+
+"I know EXACTLY who you are... but you're still not allowed in here."
+
+You ARE authenticated (server knows who you are), but you don't have PERMISSION for this specific action.
+
+401 vs 403 — the classic confusion:
+
+	401	403
+Meaning	"I don't know you"	"I know you, but you're not allowed"
+Analogy	Trying to enter a club without an ID	Showing your ID, but you're not on the VIP guest list
+404 Not Found 🕳️
+
+"Whatever you're looking for... doesn't exist here."
+
+The single most famous error on the internet. URL/resource simply doesn't exist.
+
+💥 5xx — Server Error Family (SERVER's fault)
+500 Internal Server Error 💣
+
+"Something broke on OUR end. It's not you, it's us."
+
+Generic "the server crashed/had a bug while processing your request." You did nothing wrong — the backend code itself failed.
