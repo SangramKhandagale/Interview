@@ -1,0 +1,37 @@
+📋 The 5 Main Methods
+GET 👀 — "Just show me the menu"
+
+"I wanna SEE something, don't change anything."
+
+Fetches data. Read-only. Doesn't modify anything on the server.
+
+GET /users/101   →  "Show me user 101's details"
+POST ➕ — "Add a NEW dish to the menu"
+
+"Create something brand new."
+
+Creates a new resource. Every time you POST, a new thing gets added.
+
+POST /users   →  "Create a new user" (Body: {name: "Raj"})
+PUT 🔁 — "Replace the ENTIRE dish recipe"
+
+"Overwrite/replace the whole thing with what I'm sending."
+
+Updates a resource by completely replacing it. If you don't include a field, it might get wiped out.
+
+PUT /users/101   →  Replaces ALL of user 101's data with new data
+PATCH 🩹 — "Just change ONE ingredient"
+
+"Update only the specific part I mention, leave the rest alone."
+
+Partially updates a resource. Only touches the fields you send.
+
+PATCH /users/101   →  Body: {email: "new@email.com"} 
+                    (only updates email, everything else untouched)
+DELETE 🗑️ — "Remove this dish from the menu"
+
+"Get rid of this resource."
+
+Deletes the resource.
+
+DELETE /users/101   →  "Delete user 101"
