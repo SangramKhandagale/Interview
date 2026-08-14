@@ -1,0 +1,50 @@
+🌐 The Mission: You type www.instagram.com and hit Enter
+
+Here's the thing — computers don't understand "instagram.com," they only understand IP addresses (like 157.240.12.35). So DNS's whole JOB is to convert that human-friendly name into a machine-friendly number. 📞➡️🔢
+
+🕵️ Step-by-Step: The Full Chase
+Step 1: Check your own Browser Cache 🧠
+
+"Wait, have I visited this site recently? Let me check my memory first."
+
+Browser checks if it already resolved this domain recently (cached). If yes → done, skip everything below! ⚡
+
+Step 2: Check OS Cache 💻
+
+"Browser doesn't remember? Let me (the computer) check MY memory."
+
+If not in browser cache, the Operating System checks its own DNS cache.
+
+Step 3: Ask the Resolver (usually your ISP) 📞
+
+"Neither of us remembers? Fine, let's call in a professional."
+
+If still no luck, the request goes to a DNS Resolver (usually run by your ISP, or public ones like Google's 8.8.8.8). This resolver is like your personal assistant who does all the legwork below on your behalf.
+
+Now the Resolver goes on ITS OWN detective mission 🔎
+Step 4: Ask a Root Server 🌍
+
+Resolver: "Yo, I need instagram.com's IP. Where do I even start?"
+Root Server: "I don't know the exact address, but go ask the '.com' guy, he handles all .com domains."
+
+There are 13 root server clusters worldwide — they don't know exact answers, they just point you in the right direction. Like asking a mall directory "which floor is Zara on?"
+
+Step 5: Ask the TLD Server (.com, .org, .in etc) 🏢
+
+Resolver: "Hey .com server, where's instagram.com?"
+TLD Server: "I don't have the exact IP either, but go ask Instagram's own official Name Server — here's their address."
+
+Step 6: Ask the Authoritative Name Server 🎯
+
+Resolver: "Hey, YOU'RE Instagram's official record-keeper right? What's your IP?"
+Name Server: "Yes! Here you go: 157.240.12.35" ✅
+
+THIS is the guy who actually KNOWS the real answer — because Instagram's own DNS records live here.
+
+Step 7: Resolver sends IP back to your browser 📬
+
+Resolver: "Got it! Here's the IP: 157.240.12.35"
+
+Step 8: Browser connects using that IP 🚀
+
+Now your browser does a TCP handshake (remember that from before? 😉) with 157.240.12.35, and finally... Instagram loads! 🎉
