@@ -1,0 +1,43 @@
+📮 TCP (Transmission Control Protocol) — "The Reliable Overthinker"
+
+TCP is that friend who triple-checks everything before moving forward.
+
+✅ Reliable — Every packet MUST arrive. If one gets lost, it's resent until confirmed.
+✅ Ordered — Packets arrive in the EXACT order they were sent (even if they take different routes).
+✅ Connection-based — Does a "handshake" first (like saying "hi, you there? cool, let's talk" before sending anything) 🤝
+
+How it guarantees delivery:
+
+"Hey I sent packet 1... did you get it?" ✅ "Yes!" → "Cool, sending packet 2 now..."
+
+It's SLOW-ish because of all this checking, but nothing gets lost or scrambled.
+
+Used for: Things where losing even 1 byte = disaster
+
+🌐 Loading websites (HTTP/HTTPS)
+📧 Emails
+📁 File downloads
+💳 Banking transactions
+
+(Imagine your bank transfer losing a packet with your money amount in it 💀 — TCP prevents that nightmare)
+
+📡 UDP (User Datagram Protocol) — "The Chill, No-Filter Friend"
+
+UDP is that friend who just yeets the message and doesn't care if you got it or not.
+
+❌ No reliability — Sends packets and doesn't check if they arrived. Lost packet? Doesn't care, moves on.
+❌ No ordering — Packets might arrive out of order, and UDP won't fix that.
+❌ No handshake — No "hi, you there?" — just straight up sends data immediately. Faster start.
+
+How it "guarantees" delivery:
+
+"Here's data. Bye." 🏃💨 (no confirmation needed)
+
+It's FAST because there's zero overhead/checking.
+
+Used for: Things where speed > perfection, and old data is USELESS anyway
+
+🎥 Video calls (Zoom, Google Meet)
+🎮 Online gaming
+📞 Voice calls (VoIP)
+📺 Live streaming
