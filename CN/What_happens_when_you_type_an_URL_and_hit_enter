@@ -1,0 +1,110 @@
+🎯 The Mission: You type https://www.instagram.com and hit Enter
+
+Let's walk through this like a movie with clear Acts 🎥
+
+🎬 ACT 1: Browser Prep Work
+
+Step 1: Parse the URL 🔍
+Browser breaks down what you typed:
+
+https://www.instagram.com
+  ↳ Protocol: https
+  ↳ Domain: www.instagram.com
+  ↳ Path: / (homepage)
+
+Step 2: Check caches first 🧠
+Browser checks: "Do I already know instagram.com's IP address?"
+
+Browser cache? → Check
+OS cache? → Check
+Router cache? → Check
+
+(We covered this whole flow in DNS resolution!)
+
+🎬 ACT 2: DNS Resolution — "Finding the address" 📇
+
+If not cached, the full DNS chase begins:
+
+Browser → Resolver (ISP) → Root Server → .com TLD Server → Instagram's Name Server
+                                                              ↓
+                                              Returns IP: 157.240.12.35 ✅
+
+(Remember our whole "finding your gf's house" analogy? Exact same process here) 💌
+
+🎬 ACT 3: TCP Connection — "Establishing trust" 🤝
+
+Now the browser knows the IP. Time to actually CONNECT to that server.
+
+3-Way Handshake:
+
+Browser  ----SYN----->  Server
+Browser  <--SYN-ACK---  Server
+Browser  ----ACK----->  Server
+       🎉 TCP Connection Established! 🎉
+
+(Our "You up? 👀 → Yeah, you? 👀 → Bet 😎" analogy)
+
+🎬 ACT 4: TLS/SSL Handshake — "Locking the box" 🔒
+
+Since it's HTTPS, before any actual data is exchanged, we need encryption set up:
+
+Browser: "Hey, let's talk securely, here's what I support"
+Server:  "Cool, here's my SSL certificate to prove I'm really Instagram"
+Browser: "Verified! ✅ Let's agree on a secret encryption key"
+       🔐 Secure encrypted tunnel established! 🔐
+
+(Our locked-box-letter analogy from before) 💌🔐
+
+🎬 ACT 5: (Optional) Load Balancer + CDN routing 🌐
+
+Before hitting Instagram's actual servers, the request might first pass through:
+
+Load Balancer ⚖️ → decides WHICH backend server handles this request (Round Robin / Least Connections, remember?)
+CDN 🚚 → if you're requesting a static asset (image, video, CSS), it might get served from the NEAREST edge server instead of traveling all the way to Instagram's main servers
+
+(Our "McDonald's franchise" analogy — you get served from your nearest branch, not the one HQ) 🍔
+
+🎬 ACT 6: HTTP Request — "Actually asking for the page" 📨
+
+NOW, over that secure encrypted connection, the browser sends an actual HTTP GET request:
+
+GET / HTTP/1.1
+Host: www.instagram.com
+Cookie: sessionId=abc123
+User-Agent: Chrome/Windows
+
+(Notice the Cookie header — this is how the server knows you're logged in! Remember our session/JWT breakdown?) 🍪
+
+🎬 ACT 7: Server Processing 🖥️
+
+The server receives the request and does its thing:
+
+Checks authentication (is this a valid session/JWT?) 🔐
+Queries the database if needed (fetch your feed, posts, etc.) 🗄️
+Runs backend logic (Node.js/Django/whatever powers Instagram)
+Prepares an HTML/JSON response
+🎬 ACT 8: HTTP Response — "Sending the page back" 📬
+
+Server sends back a response with a status code:
+
+HTTP/1.1 200 OK
+Content-Type: text/html
+
+<html>...(actual page content)...</html>
+
+(Remember our status code breakdown — 200 OK means "here's exactly what you asked for"!) ✅
+
+🎬 ACT 9: Browser Renders the Page 🎨
+
+Browser now:
+
+Parses HTML → builds the DOM (page structure)
+Parses CSS → applies styling
+Executes JavaScript → makes it interactive
+Fetches additional resources → images, fonts, videos (often via CDN, using MORE http requests for each!)
+
+Each of these additional resources? They might repeat parts of this ENTIRE process (DNS lookup if different domain, TCP connection, etc.) — that's why a single webpage can trigger DOZENS of network requests happening in parallel! 🤯
+
+🎬 ACT 10: Page Fully Loads 🎉
+
+Instagram's feed appears on your screen. Total time elapsed: usually under 1-2 seconds, even though we just walked through like 10 major steps involving servers across the globe! ⚡
