@@ -1,0 +1,60 @@
+🧠 First — why do we even need load balancing?
+
+Imagine ONE server trying to handle MILLIONS of users all by itself. It'll crash, slow down, or just die from overload 💀. So instead, we run multiple servers (copies of the same app), and put a Load Balancer in front like a traffic cop 👮 deciding which server gets which request.
+
+Users → [Load Balancer] → Server 1
+                        → Server 2
+                        → Server 3
+
+The BIG question is: HOW does the load balancer decide who goes where? That's where these algorithms come in 👇
+
+🔄 1. Round Robin — "Take turns, everyone gets equal chances"
+
+"You go to counter 1, next person counter 2, next counter 3, next back to counter 1..."
+
+The load balancer just cycles through servers one by one, in order, no matter how busy each one currently is.
+
+Request 1 → Server 1
+Request 2 → Server 2
+Request 3 → Server 3
+Request 4 → Server 1 (back to start)
+Request 5 → Server 2
+
+Analogy: 🎡 It's like a merry-go-round — everyone gets a turn in strict order, no cutting in line, no favoritism.
+
+Downside: ⚠️ It doesn't care if Server 1 is currently struggling with 10 heavy tasks while Server 2 is chilling doing nothing. It just blindly follows the rotation. Fair in COUNT, not fair in actual LOAD.
+
+Best for: Servers that are roughly equal in power AND requests that take similar time to process.
+
+⚖️ 2. Least Connections — "Send me to whoever's LEAST busy right now"
+
+"Don't just take turns — actually CHECK who has the shortest line, and send me there."
+
+The load balancer checks how many active connections/requests each server is CURRENTLY handling, and sends the new request to whichever server has the FEWEST ongoing tasks.
+
+Server 1: handling 8 requests right now 😰
+Server 2: handling 2 requests right now 😌
+Server 3: handling 5 requests right now 🙂
+
+New request → goes to Server 2 (least busy!) ✅
+
+Analogy: 🛒 You're at the supermarket, and instead of just going to "whichever counter's turn it is," you actually LOOK at which line is shortest and walk there. Smart, dynamic decision-making.
+
+Best for: When requests take VERY different amounts of time to process (some quick, some heavy) — because it adapts in real-time instead of blindly rotating.
+
+🔑 3. IP Hash — "Same customer ALWAYS goes to the SAME counter"
+
+"I'll remember your face — every time YOU specifically show up, you go to the SAME server, every single time."
+
+The load balancer takes the client's IP address, runs it through a hash function, and that determines WHICH server they consistently get sent to.
+
+Your IP: 192.168.1.5  → Hash → always routes to Server 2
+Friend's IP: 10.0.0.3 → Hash → always routes to Server 1
+
+Every time YOU (same IP) make a request, you land on the SAME server, consistently.
+
+Analogy: 🏪 Imagine a supermarket where the SAME cashier always serves YOU specifically, every single visit, because they recognize your face. Meanwhile your friend always gets a DIFFERENT dedicated cashier.
+
+Why is this useful? 🧠 Because some apps store temporary data (like your shopping cart or session info) locally on ONE specific server's memory. If you got randomly routed to a DIFFERENT server next time, that server wouldn't know your cart exists! IP Hash solves this by making sure you ALWAYS land on the server that "remembers" you.
+
+This is called "session persistence" / "sticky sessions." 🍯
