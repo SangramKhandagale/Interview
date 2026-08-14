@@ -1,0 +1,57 @@
+🤝 The 3-Way Handshake (Starting a conversation)
+
+Imagine you're calling your gf on the phone for the first time that day. You don't just start talking — there's a mini ritual first.
+
+Step 1: SYN (Synchronize) 📞
+
+Client: "Hey, you there? Can we talk? Here's my starting point (sequence number)."
+
+Client sends a SYN packet to the server saying "I wanna connect."
+
+Step 2: SYN-ACK (Synchronize + Acknowledge) 📲
+
+Server: "Yeah I'm here! Got your message. Here's MY starting point too, can we talk?"
+
+Server replies with BOTH:
+
+ACK → "I received your SYN"
+SYN → "I also want to connect, here's my sequence number"
+
+Step 3: ACK (Acknowledge) ✅
+
+Client: "Cool, got it. Let's talk!"
+
+Client sends final ACK confirming — and NOW the actual connection is established 🎉
+
+Client  ----SYN----->  Server
+Client  <--SYN-ACK---  Server
+Client  ----ACK----->  Server
+      🎉 Connected! Data starts flowing 🎉
+
+Why 3 steps and not 2? Because BOTH sides need to confirm they can send AND receive. It's not enough for just one person to say "I hear you" — both need to prove it works both ways (like making sure both your mic AND speaker work before a call, not just one) 🎙️
+
+👋 The 4-Way Termination (Ending a conversation)
+
+Now here's the thing — ending is MORE steps than starting (4 instead of 3), because closing a connection is like a breakup where both people need separate closure 💔 (dramatic, I know, but it fits).
+
+Step 1: FIN (Finish) 🚪
+
+Client: "Hey, I'm done sending stuff. Closing my side."
+
+Step 2: ACK ✅
+
+Server: "Okay noted, but give me a sec, I might still have stuff to send you."
+
+Step 3: FIN 🚪
+
+Server: "Okay NOW I'm also done sending. Closing my side too."
+
+Step 4: ACK ✅
+
+Client: "Got it, we're both done. Bye!"
+
+Client  ----FIN----->  Server
+Client  <---ACK------  Server
+Client  <---FIN------  Server
+Client  ----ACK----->  Server
+      👋 Connection fully closed 👋
