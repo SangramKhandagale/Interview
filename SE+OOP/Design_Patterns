@@ -1,0 +1,24 @@
+🎯 Design Patterns Cheat Sheet
+
+1️⃣ Singleton 👑
+"Only ONE of me can exist in this whole app, no clones allowed."
+→ Ensures a class has only one instance (like one Database connection, one Logger).
+
+2️⃣ Factory 🏭
+"Don't create objects yourself, just tell ME what you want, I'll hand it to you."
+→ A method that creates objects for you instead of using new directly, so you don't need to know the exact class.
+
+3️⃣ Observer 👀
+"Notify all my subscribers the moment something changes."
+→ One object (subject) changes state → all its followers/listeners get auto-notified (like YouTube notifications when your favorite creator uploads 📹).
+
+4️⃣ MVC (Model-View-Controller) 🎬
+"Data, Design, and Decisions — each handled by a different guy, no overlap."
+→ Model = data/logic, View = what user sees, Controller = middleman who connects both.
+
+🥡 Super simple one-liner to remember all 4:
+
+Singleton = only one boss 👑
+Factory = object-making machine 🏭
+Observer = gossip network 👀 (everyone gets the tea ☕ instantly)
+MVC = teamwork with clear roles 🎬
