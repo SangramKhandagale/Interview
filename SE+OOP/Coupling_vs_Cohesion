@@ -1,0 +1,64 @@
+🧠 First, the simple definitions
+
+Coupling = How much two modules/classes depend on each other.
+Cohesion = How focused a single module/class is on doing ONE job well.
+
+The golden rule: 👉 Low Coupling + High Cohesion = 🔥 Good Code
+
+💔 Coupling — Think of it like a relationship
+
+Imagine two friends, Raj and Priya.
+
+High Coupling (Bad) 😬
+Raj literally can't do ANYTHING without calling Priya first. Wanna order food? Ask Priya. Wanna pick a movie? Ask Priya. If Priya's phone dies, Raj's whole life stops.
+
+That's tightly coupled code — if you change one class, you're forced to change five others too. One small edit = everything breaks. 😵
+
+Low Coupling (Good) ✅
+Raj and Priya are independent people who occasionally team up but can function fine on their own. If Priya's busy, Raj still lives his life.
+
+That's loosely coupled code — modules interact through clean interfaces, but don't need to know each other's internal business.
+
+java
+// ❌ Tightly coupled
+class Car {
+    Engine engine = new PetrolEngine(); // stuck with this forever
+}
+
+// ✅ Loosely coupled
+class Car {
+    Engine engine; // any engine type can be plugged in
+    Car(Engine engine) { this.engine = engine; }
+}
+🎯 Cohesion — Think of it like a job role
+
+Low Cohesion (Bad) 😩
+Imagine hiring a "chef" who also has to do accounting, clean toilets, and fix the wifi. He's overloaded, confused, and bad at everything because his job isn't focused.
+
+java
+class Utility {
+    void cookFood() {}
+    void calculateTax() {}
+    void sendEmail() {}
+    void fixWifi() {}
+} 
+// bro this class has an identity crisis 💀
+
+High Cohesion (Good) ✅
+A chef who ONLY cooks. That's it. That's his job. He's a master at it because he's laser-focused.
+
+java
+class Chef {
+    void cookFood() {}
+    void chopVegetables() {}
+    void plateDish() {}
+}
+// clean, focused, does ONE thing really well 👨‍🍳
+📊 Quick Cheat Table
+	Loose Coupling ✅	High Cohesion ✅
+Meaning	Modules don't depend heavily on each other	Each module does ONE clear job
+Goal	Easy to change one thing without breaking others	Easy to understand & maintain
+Bad version	Tight coupling (everything connected, fragile)	Low cohesion (messy, does everything)
+🥡 One-line takeaway to remember forever:
+
+"Talk less to others (low coupling), focus more on your own job (high cohesion)."
