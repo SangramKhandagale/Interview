@@ -1,0 +1,243 @@
+1️⃣ Face Authentication — this ones genuinely strong, lean into it 💪
+How liveliness detection actually works
+
+Not a simple "blink detection" — it's smile detection using 3 combined signals on facial landmarks from face-api.js:
+
+MAR (Mouth Aspect Ratio) — mouth height ÷ mouth width. A smile changes this ratio measurably.
+Corner elevation — smiling lifts the corners of your mouth relative to the center — measured as a normalized distance.
+Lip curvature — the upper lip curves during a genuine smile, measured via a handful of central landmark points.
+
+These 3 scores get combined into a weighted confidence score: MAR×0.4 + elevation×0.4 + curvature×0.2, and only counts as a real smile if confidence crosses 0.6 for 2 consecutive frames (prevents a random single-frame glitch from passing).
+
+Why this matters: this is real anti-spoofing logic — a static photo held up to the camera can't "smile" on command, so this blocks the most basic photo-based spoofing attack. It won't stop a video replay attack, but it's a legitimate first layer.
+
+How Aadhaar face matching works
+
+EnhancedFaceApiService extracts a face descriptor (a 128-number vector representing facial features) from both the Aadhaar photo and the live camera photo, then computes Euclidean distance between the two vectors. Smaller distance = more similar faces. There's a threshold (0.42 for live comparisons, stricter 0.38 for document-to-document) — if distance ≤ threshold, it's a match.
+
+Smart detail: thresholds are DYNAMICALLY adjusted based on image quality — blurry/small/low-quality faces get a stricter effective threshold, since low quality reduces reliability of the match. That's a genuinely thoughtful engineering decision.
+
+🎤 Your answer for "walk me through face auth"
+
+"Authentication compares a face descriptor extracted from the user's Aadhaar photo against a live camera capture using face-api.js, computing Euclidean distance between 128-dimensional face embeddings — a match requires the distance to fall under a quality-adjusted threshold. Before that comparison happens, liveliness detection requires the user to smile, verified through three combined signals on facial landmarks — mouth aspect ratio, corner elevation, and lip curvature — to prevent someone from just holding up a static photo."
+
+2️⃣ Fraud Alert Calls (Bland.ai) — real, working, and honestly cool 📞
+
+When suspicious login activity is detected (multiple failed attempts), BlandAPIService triggers an actual automated phone call via Bland.ai's API — not a text alert, an actual voice call — that speaks a pre-written Hindi script to the user, telling them about the suspicious activity and advising a password change.
+
+Notice this is HARDCODED Hindi, not dynamically translated — the script itself is written directly in Hindi in the code (hindiScript variable). That's fine and real, just be accurate: it's not multi-lingual, it's specifically built for Hindi-speaking users.
+
+🎤 Your answer:
+
+"When we detect multiple failed login attempts within 30 minutes, the system automatically triggers a phone call through Bland.ai's voice API using a pre-written Hindi security script, notifying the user of the suspicious activity and advising them to change their password if it wasn't them."
+
+3️⃣ Voice Support — be careful how you phrase this now
+The real flow:
+User speaks → audio blob captured
+Groq's Whisper (whisper-large-v3) transcribes it
+Whisper's detected language gets sanitized — if it's Urdu, the text gets transliterated to Hindi using a character mapping table (not translated, transliterated — meaning Urdu script letters get swapped for their Hindi/Devanagari equivalents); anything that's not English or Hindi defaults to English
+Transcription + conversation history (last 10 messages, kept in an in-memory Map, not a database) gets sent to Groq's llama3-70b-8192 with a carefully engineered system prompt
+That prompt explicitly instructs the model to classify intent, priority, department AND — importantly — never ask for sensitive info (account numbers, PIN, Aadhaar, OTP) — a real security-conscious design choice
+Response optionally gets converted back to speech via Google Cloud TTS
+The conversation gets logged to Google Sheets via a Google Apps Script webhook, not a bank database
+
+The "call summarized" claim — technically, each turn's response field IS effectively a resolution/summary of that exchange, and it does get logged with intent/priority/department tagging. So there's truth here — just don't call it a formal "call summarization" feature like a separate summarization model; it's baked into the same classification response.
+
+🎤 Your corrected answer:
+
+"Voice queries get transcribed using Groq's Whisper model, then analyzed by LLaMA 3 70B through a structured prompt that classifies intent, priority, and department while explicitly avoiding requests for sensitive banking details like account numbers or OTPs — a deliberate security guardrail. The conversation, along with the resolution and classification metadata, gets logged to a Google Sheets-based ticketing system for the support team to review."
+
+Don't say "submits into bank's database" — say "logged to a structured ticketing sheet" instead, since that's what's actually true.
+
+4️⃣ Investment Advisor — reframe this honestly too
+
+It's a genuinely reasonable rule-based recommendation engine: user inputs risk tolerance, time horizon, investment goal, and currency → the system maps these to a hardcoded allocation across asset classes (Fixed Deposits, Bonds, Gold, Stocks, etc.), with India-specific options when currency is INR. It ALSO pulls real market data (S&P 500 quote via Alpha Vantage, bond yields via Financial Modeling Prep) — so there's real external data, just not AI-generated advice.
+
+🎤 Your accurate answer:
+
+"The investment advisor takes a user's risk tolerance, investment horizon, and goal, and maps that profile to a diversified allocation recommendation — a rules-based decision system rather than an LLM-generated one — while pulling live market data like S&P 500 quotes and treasury bond yields to contextualize the recommendations with real market conditions."
+
+If they ask "is this AI-powered?" — be honest: "The recommendation logic itself is rule-based, not LLM-driven — I made that choice because for financial recommendations, deterministic, explainable logic is more trustworthy and auditable than an LLM's black-box reasoning, especially for something people might make real money decisions on." That's actually a STRONG answer — turns an honesty moment into a demonstration of good judgment about when NOT to use AI.
+
+5️⃣ Database Layer — MongoDB confirmed
+
+database/lib/mongodb.ts sets up the connection, and there are real Mongoose-style models: SupportTicket.ts and Emergencymodels.ts. So MongoDB genuinely is used somewhere in this project (likely for the Emergency feature and possibly a proper ticket store), even though the voice-specific flow logs to Sheets instead. Worth clarifying in an interview if asked "where's this all stored" — the honest answer is "MongoDB for some features like Emergency and support tickets, Google Sheets specifically for the voice conversation log — not fully consolidated into one data store, which I'd flag as something to unify."
+
+🎤 Your Full "Walk Me Through Samadhan" Answer (rebuilt, accurate)
+
+"Samadhan is a banking accessibility platform with three main pieces I can speak to in depth. First, Aadhaar-based face authentication — comparing face embeddings between a user's Aadhaar photo and a live camera capture using Euclidean distance, gated by smile-based liveliness detection to prevent static photo spoofing. Second, an AI voice support system — Whisper transcribes spoken queries in English or Hindi, LLaMA 3 classifies intent and generates a response while explicitly avoiding requests for sensitive banking details, and conversations get logged for the support team. Third, a rule-based investment advisor that maps a user's risk profile to asset allocation recommendations, enriched with live market data. There's also an automated fraud alert system using Bland.ai to place real phone calls when suspicious login activity is detected."
+
+💎 A Feature You're Not Even Claiming (add this later)
+
+Emergency Medical Loan — a real, sophisticated feature not on your resume at all:
+
+User verifies Aadhaar identity + hospital (via a hospital verification service)
+Uploads a medical certificate → OCR extracts text via a RapidAPI OCR service (parses nested entity structures, calculates confidence scores)
+That extracted text likely feeds an AI-generated summary (aiGeneratedSummary field in the schema)
+Full loan application (amount, emergency type, patient details) gets stored in MongoDB with a proper approval workflow — Pending/Approved/Rejected states, bank employee notes, interest rate, repayment period
+Static methods for querying by Aadhaar, status, application history — this is a REAL, production-shaped feature
+
+This is arguably your most interesting feature and it's missing from your resume entirely. We'll add it when we rebuild.
+
+🏗️ Architecture / Overview
+
+Walk me through Samadhan end to end.
+"Samadhan is a banking accessibility platform aimed at users who struggle with traditional digital banking — illiterate users, disabled users, people who need faster emergency access to funds. It has four main pieces: Aadhaar-based face authentication with liveliness detection, an AI voice support system for query resolution, a rule-based investment advisor, and an emergency medical loan system with OCR-based document verification. It's built with Next.js and TypeScript, using MongoDB for structured data like loan applications, and integrates several external APIs — Groq for AI/transcription, face-api.js for biometric matching, Bland.ai for automated calls, and RapidAPI-hosted OCR."
+
+Tech stack and why?
+"Next.js for the same reasons as PeeKaboo — unified frontend and API routes in one codebase. MongoDB specifically here because loan applications and support tickets have flexible, evolving fields — a document model fit better than forcing everything into rigid relational tables, especially with optional fields like medical certificate data that not every application has."
+
+How many features, walk through each briefly?
+"Four core ones: Face authentication for secure, accessible login using Aadhaar photo matching; AI voice support for query resolution in English and Hindi; a rule-based investment advisor for financial planning; and an emergency medical loan system that verifies hospital details and medical certificates via OCR before routing applications through a bank approval workflow."
+
+Monolith? How organized?
+"Feature-based folder structure — FaceAuth, InvestmentAdvisor, Emergency, support each have their own directory with components and API logic. It's a single Next.js deployment, but features are reasonably isolated from each other."
+
+Why MongoDB AND Google Sheets?
+"Not an intentional dual-database design — MongoDB is the real structured store, used for Emergency Loans and support tickets via defined Mongoose schemas. The voice support conversation logging specifically writes to Google Sheets through a Apps Script webhook, which was likely a faster way to get a working ticketing view without building an admin UI on top of MongoDB. If I were cleaning this up, I'd consolidate everything into MongoDB with a proper admin dashboard." (Honest, and a good "what I'd improve" answer.)
+
+🎭 Face Authentication
+
+Walk me through how face authentication works.
+"Two images get processed — the user's Aadhaar photo and a live camera capture. face-api.js extracts a 128-dimensional face descriptor from each using a face landmark and recognition model. We compute the Euclidean distance between the two descriptors — smaller distance means more similar faces — and if that distance falls under a threshold, it's considered a match."
+
+What is a face descriptor?
+"It's a numerical vector — essentially a compressed representation of facial features — output by a face recognition neural network. Two photos of the same person produce descriptors that are close together in that vector space; different people produce descriptors that are far apart."
+
+Why Euclidean distance?
+"It's the standard metric face-api.js is built around and validated for — the underlying model was trained so that Euclidean distance between its output descriptors correlates with facial similarity. It's simple, fast to compute, and works well for this use case."
+
+Why different thresholds for document vs live photos?
+"Aadhaar document photos are typically lower resolution, sometimes slightly different lighting or angle than a live selfie, so a document-to-live comparison naturally has more baseline variance than live-to-live. We use a stricter threshold (0.38) for document comparisons and a slightly more lenient one (0.42) for general live comparisons, and additionally adjust dynamically based on measured image quality."
+
+How does liveliness detection work? Why smile, not blink?
+"It's smile detection using three combined signals on facial landmarks — mouth aspect ratio, mouth corner elevation, and lip curvature — combined into a weighted confidence score, requiring 2 consecutive frames above threshold to confirm. I'd guess smile was chosen over blink because smiling produces a larger, more measurable change in landmark geometry than a blink, which can be subtle and easy to miss depending on frame rate and eye shape variation."
+
+What is MAR and how is it calculated?
+"Mouth Aspect Ratio — the vertical distance between the top and bottom lip center points, divided by the horizontal distance between the mouth corners. A smile widens the mouth and typically increases this ratio measurably compared to a neutral expression."
+
+Why 2 consecutive frames, not 1?
+"A single frame could register a false positive from a brief facial twitch, motion blur, or landmark detection noise. Requiring 2 consecutive frames above the confidence threshold filters out those one-off glitches while still keeping the check fast — checking every 200ms means confirming across roughly 400ms of sustained smiling."
+
+Would holding up a photo of a smiling person fool this?
+⚠️ Honest answer, and a good one to give proactively: "Yes, potentially — this liveliness check verifies a smile is present in the current frame, but it doesn't inherently distinguish a live face from a high-quality printed or displayed photo of a smiling person. It blocks the simplest spoof — a neutral static photo — but wouldn't catch a more deliberate photo-based attack. A stronger implementation would add depth-sensing, blink randomization, or challenge-response prompts." This is a great, mature answer — shows you understand the LIMITS of your own security feature, which interviewers respect a lot.
+
+Poor lighting/bad angle?
+"The detection would likely fail to find a face at all, or the quality score would drop, which pushes the effective match threshold stricter — so a bad-quality live capture is actually less likely to authenticate successfully, which is the safer failure mode."
+
+📞 Fraud Detection / Bland.ai
+
+How does fraud detection trigger?
+"Based on failed login attempts within a 30-minute window — once that count crosses a threshold, the system calls notifyUserOfSuspiciousActivity, which triggers an automated phone call."
+
+Why phone calls instead of SMS/email?
+"Phone calls are harder to miss or ignore than a text or email, and for a banking security context, that immediacy matters — someone's more likely to answer and act on a call than notice an SMS buried in notifications."
+
+Hardcoded or dynamic Hindi script?
+"Hardcoded — the Hindi security message is written directly in the code as a template string with the user's name and failed-attempt details interpolated in, not generated dynamically by an LLM."
+
+Is this full conversational AI or just TTS?
+"It's Bland.ai's voice API — it converts the script to natural-sounding speech and places the actual call, but the script itself is fixed and passed in, so it's closer to smart text-to-speech delivery than a freely conversational AI agent responding to the user in real time."
+
+What if the call fails?
+"The function returns false and logs the error, but there's no automatic retry or fallback channel like SMS built in — that's a gap I'd flag for improvement."
+
+🎙️ Voice Support
+
+Full pipeline, start to finish.
+"Audio gets recorded in the browser, sent to Groq's Whisper large-v3 model for transcription, which also returns a detected language. If the detected language is Urdu, the text gets transliterated character-by-character into Hindi script, then the language gets sanitized down to strictly English or Hindi. That transcription, plus the last 10 messages of conversation history for context, gets sent to LLaMA 3 70B with a system prompt that classifies intent, department, and priority, generates a response, and explicitly avoids requesting sensitive information. The response optionally gets converted back to speech via Google Cloud TTS, and the full exchange gets logged to a Google Sheets ticketing system via a webhook."
+
+Which languages are actually supported?
+⚠️ "English and Hindi only. There is Urdu-to-Hindi transliteration handling, but that's converting Urdu script into Hindi rather than genuinely supporting Urdu as a distinct language — anything outside English or Hindi defaults to English." Say this plainly if asked, don't hedge.
+
+Why transliterate Urdu instead of translate?
+"Transliteration maps script characters directly (Urdu letters to their closest Hindi/Devanagari equivalents) rather than actually translating meaning between languages — likely a pragmatic shortcut given Hindi and Urdu share a lot of spoken vocabulary despite different scripts, so transliterating the script gets you readable Hindi text without needing a full translation model."
+
+Why Whisper specifically?
+"Whisper large-v3 is a strong, widely-used open transcription model with solid multilingual support, and being available directly through Groq's API meant no separate integration or hosting was needed — one provider for both transcription and the LLM analysis step."
+
+How is conversation context maintained?
+"In an in-memory JavaScript Map, keyed by session ID, holding the last messages for that conversation."
+
+Where is history stored — persistent or lost on restart?
+⚠️ "It's in-memory only — a plain Map in the Node process. That means conversation context is lost if the server restarts or if requests get load-balanced across multiple server instances, since each instance would have its own separate memory. That's a real scalability limitation — in production, this would need to move to something like Redis or a database-backed session store." Great honest answer, shows you understand production concerns.
+
+What security measures prevent sensitive info requests?
+"The system prompt explicitly instructs the model never to ask for account numbers, PINs, Aadhaar numbers, OTPs, or other sensitive details, and to redirect the user to official channels for account-specific queries — a prompt-level guardrail rather than a hard technical block."
+
+Is that guardrail reliable?
+⚠️ Good follow-up to volunteer: "It's a prompt instruction, not an enforced technical constraint — a sufficiently adversarial input could theoretically get the model to deviate from those instructions, since there's no separate validation layer checking the model's output before it's shown to the user. A more robust version would add output filtering as a second safety layer."
+
+Where does data actually get stored?
+"Logged to Google Sheets via an Apps Script webhook — not a bank database. Fields like session ID, intent, priority, department, and the resolution get appended as a row."
+
+What if Whisper transcribes poorly?
+"There's no explicit confidence-based fallback in this flow — a bad transcription would just get passed straight into the LLM analysis, likely producing an off-target or generic response, since there's nothing checking transcription confidence before proceeding."
+
+Fallback if Groq API is down?
+"Errors get caught and the function returns a generic apology response asking the user to try again or contact customer service — there's no secondary provider fallback."
+
+How would you scale in-memory context storage?
+"Move it to Redis for fast, shared access across multiple server instances, with a TTL so old sessions expire automatically instead of growing memory usage indefinitely."
+
+💰 Investment Advisor
+
+AI-generated or rule-based?
+"Rule-based — a deterministic function maps risk tolerance, time horizon, and investment goal to a fixed set of asset allocations and percentages. There's no LLM call anywhere in this file."
+
+Walk me through the logic.
+"For example, low risk tolerance with a short time horizon under 3 years produces a conservative allocation — heavy in fixed deposits and government bonds, with a small allocation to gold and blue-chip dividend stocks. As risk tolerance or time horizon increases, the logic shifts allocation toward higher-growth, higher-volatility assets. Currency also adjusts the specific instruments recommended — Indian-currency users get India-specific options like Nifty 50 stocks."
+
+Why rule-based over LLM?
+"For financial recommendations, deterministic and auditable logic is more trustworthy than an LLM's reasoning, which can be inconsistent or hard to explain. If a user asks why they got a particular allocation, I can point to the exact rule that produced it — that's harder to guarantee with an LLM-generated recommendation."
+
+Where does market data come from?
+"Alpha Vantage for a live market quote and Financial Modeling Prep for treasury bond yields — real external data used to contextualize the static rule-based recommendations, though the recommendations themselves don't dynamically change based on that data in the current logic."
+
+What if those APIs are down/rate-limited?
+⚠️ Genuinely worth checking — I didn't see explicit fallback handling in what I reviewed. Fair honest answer: "I'd need to double check the exact fallback behavior, but if it mirrors the pattern elsewhere in the app, it likely fails to display live data gracefully rather than crashing, though I'd want to verify a proper fallback exists."
+
+🏥 Emergency Loan
+
+Walk me through the flow.
+"Applicant verifies their Aadhaar identity, then hospital details get verified through a hospital verification service. They upload a medical certificate, which goes through OCR to extract text — patient name, doctor name, diagnosis — along with a confidence score. All of this, plus loan amount and emergency details, gets submitted and stored in MongoDB with a Pending status, ready for bank employee review through an approval workflow."
+
+Hospital verification — how's it work?
+⚠️ I reviewed the OCR and schema in depth but not the hospital verification file itself — fair to say: "I'd want to walk through hospitalverification.ts specifically to give you the exact mechanism, but structurally it slots into the same verification pipeline before OCR."
+
+OCR pipeline for medical certificates — what if it misreads something critical?
+"Text extraction goes through a RapidAPI OCR service that returns extracted text with per-entity confidence scores, which get averaged into an overall confidence figure. If OCR misreads something like a diagnosis, that's a real risk — the schema stores both the raw extracted text and a confidence score, but I didn't see automatic rejection below a confidence threshold, meaning a low-confidence or garbled OCR result could still reach a bank employee for manual review, who would need to catch the error visually rather than the system blocking it automatically." (Honest gap — good to flag as something you'd improve.)
+
+What is the AI-generated summary actually summarizing?
+"Based on the schema field aiGeneratedSummary, it's likely a condensed version of the OCR-extracted medical certificate text and emergency description, intended to give a bank employee a quick, readable overview instead of making them read raw OCR output — though I'd want to confirm exactly which model or prompt generates it."
+
+Approval workflow — who approves, how?
+"The schema has instance methods approveLoan and rejectLoan that update status to Approved or Rejected, record who approved it and when, and optionally set the actual loan amount, interest rate, and repayment period — implying a bank employee or admin reviews applications through an admin interface and calls these methods."
+
+Why non-unique Aadhaar in schema?
+"The schema explicitly removed a unique constraint on Aadhaar number so the same person can submit multiple emergency loan applications over time — makes sense, since someone might have more than one medical emergency requiring separate loans, and there are dedicated methods like findByAadhaar and countByAadhaar to track someone's full application history."
+
+Duplicate/fraudulent applications?
+⚠️ "I didn't see explicit fraud-detection logic specifically for emergency loans beyond the general hospital/Aadhaar verification steps — that's a real gap. A production version would probably want rate-limiting on applications per Aadhaar number within a time window, and cross-referencing hospital verification more rigorously."
+
+🗄️ Database / Security
+
+MongoDB schema for Emergency Loans?
+"Fields cover applicant details, hospital verification status and confidence, patient and emergency details, loan amount, medical certificate OCR data and confidence, and application status with full approval audit fields — approvedBy, approvalDate, interest rate, repayment period."
+
+What indexes, why?
+"An index on Aadhaar number for fast applicant history lookups, one on loan status for filtering pending/approved/rejected applications quickly, one on application date for sorting recent applications, and a compound index combining Aadhaar and date for efficiently pulling a specific user's application history in order."
+
+Are Aadhaar numbers encrypted at rest?
+⚠️ "Based on the schema, Aadhaar number is stored as a plain String field with no visible encryption applied at the application level — that's a real security concern for something as sensitive as a national ID number. In a production system, this should be encrypted at rest, and I'd flag that as a priority fix." Strong, honest answer.
+
+Exposed API keys client-side?
+⚠️ "Same pattern as PeeKaboo — several keys are NEXT_PUBLIC_ prefixed, including things like the Bland.ai key and Groq keys, which means they're bundled into client-side JavaScript and technically extractable from the browser. For a fintech app handling Aadhaar and medical data, that's a more serious issue than in a market research tool — I'd prioritize moving all of these behind server-only API routes."
+
+📊 Metrics — ⚠️ needs your input
+
+Same as PeeKaboo — I can't fabricate these:
+
+How was "95% accuracy" measured, given the actual scope is English/Hindi only? You may need to either find the real number for 2 languages, or adjust the resume claim.
+How was "60% reduction in manual interventions" measured?
+Did this go beyond hackathon/prototype into real usage anywhere?
