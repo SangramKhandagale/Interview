@@ -1,0 +1,259 @@
+🗺️ The Big Picture First (how the whole thing fits together)
+User logs in (Google via Supabase Auth)
+        ↓
+User types ONE query, e.g. "protein powder"
+        ↓
+🧠 That ONE query hits Groq (LLaMA) which REWRITES it into 
+   9 different optimized queries — one per platform
+        ↓
+User toggles which platforms they want (Reddit, YouTube, Quora, 
+   Twitter/X, Google, PlayStore, Facebook Ads, Images, Strategy)
+        ↓
+EACH active platform independently: 
+   scrapes/fetches data → filters for quality → sends to Groq 
+   AGAIN with a specialized prompt → gets back structured JSON insights
+        ↓
+Results render in a dashboard, per-platform styled sections
+        ↓
+User can "save" → whole results page gets captured as a 
+   standalone HTML snapshot → uploaded to Supabase Storage
+
+That's the skeleton. Now let's go deep on the parts that'll actually get grilled.
+
+1️⃣ The Smart Query System — the cleverest part of this project 🧠
+
+File: app/api/main/smartQuery.ts
+
+This is honestly the coolest architectural decision in the whole codebase, and you should lead with this in interviews. Here's what's actually happening:
+
+User types "protein powder" — ONE query. But Reddit search doesn't work the same way Google Images search works, and Quora questions need to be phrased as QUESTIONS, not keywords. So instead of using the same raw query everywhere (which gives garbage results), generateSpecializedQueries() sends that ONE query to Groq/LLaMA with a prompt that says: "rewrite this into 9 platform-optimized versions" — and gets back structured JSON like:
+
+json
+{
+  "RedditAnalytics": "protein powder effects experience",
+  "QuoraAnalysis": "Is protein powder safe to use daily?",
+  "YouTubeVideos": "protein powder study research",
+  ...
+}
+
+Why this matters for the interview: This is a genuinely smart pattern — using an LLM not just for the FINAL analysis, but as a query-rewriting layer upfront. This is basically prompt-chaining / multi-stage LLM pipeline design, which is exactly the kind of thing product companies want to hear you understand.
+
+2️⃣ The Model Management System — bigger flex than it looks 🔧
+
+File: app/api/main/models.ts
+
+This one's slept-on. Instead of hardcoding "use llama-3.1-70b-versatile" everywhere in the code, there's a whole system where:
+
+The model name for EACH API (RedditAnalytics, SmartQuery, etc.) is stored in a Supabase table (api_models)
+Before making any Groq call, the code fetches "hey, what model should RedditAnalytics use RIGHT NOW?" from that table
+There's a 5-minute in-memory cache (CACHE_DURATION) so it's not hitting Supabase on every single request
+There's even functions to validate a model actually exists on Groq before letting you set it (validateGroqModel)
+
+Why this matters: This means you could swap Reddit's analysis from llama-3.1-8b-instant to llama-3.1-70b-versatile without redeploying any code — just update a database row. That's a legit production-grade pattern (config-driven behavior instead of hardcoded), and if an interviewer asks "how would you make your AI pipeline flexible/maintainable," THIS is your answer, straight from your own code.
+
+3️⃣ The Reddit Pipeline — let's go step by step (this is your template for ALL platforms)
+
+File: app/api/reddit-analytics/route.ts (724 lines — the biggest, most complete file, good sign this is a solid one to know deeply)
+
+Step 1: Auth 🔑
+
+getRedditAccessToken() — Reddit requires OAuth. Notice it has retry logic with exponential backoff (Math.pow(2, attempt) * 1000 — waits 2s, then 4s, then 8s between retries). This is a REAL production pattern for handling flaky APIs, not something a beginner project usually has.
+
+Step 2: Fetch raw posts 📥
+
+fetchRedditPosts() — hits Reddit's search API with the specialized query, sorted by relevance, limited to the past year, up to 100 posts, NSFW excluded.
+
+Step 3: Quality filtering — this is the smart part 🎯
+
+Two functions do the heavy lifting:
+
+hasQualityContent() — throws out stickied/locked posts, NSFW, downvoted posts, posts with barely any engagement (< 2 comments)
+calculateRelevanceScore() — a custom scoring algorithm: query terms in the TITLE score higher than in the body, terms in the subreddit name add points, and there's an engagement boost using Math.log10(score) + Math.log10(comments) (log scale so viral posts don't completely dominate)
+
+Then it sorts by score, takes the top 15, then processes the top 10 in parallel with Promise.all().
+
+Why this matters: Scraping ANY platform gives you a ton of noise — spam, irrelevant posts, dead threads. This relevance+quality filtering is literally the difference between "garbage in, garbage out" and actually useful insights. This is a real technical decision you can defend: "Raw search results were too noisy, so I built a two-stage filter — a hard quality gate, then a weighted relevance score — before sending anything to the LLM, to keep token usage down and insight quality up."
+
+Step 4: Fetch comments per post 💬
+
+For each of the top 10 posts, fetchPostComments() grabs up to 20 top comments, filters out deleted/removed ones, sorts by score.
+
+Step 5: Clean the text 🧹
+
+cleanText() strips markdown links, URLs, bold/italic formatting, headers — because raw Reddit markdown would confuse the LLM and waste tokens.
+
+Step 6: THE ACTUAL "sentiment analysis" — be honest about this in interviews ⚠️
+
+Here's something important I need you to know clearly: there's no separate NLP/sentiment model (no VADER, no TextBlob, no custom-trained classifier). The "sentiment analysis," "pain points," "emotional triggers" — ALL of it comes from ONE big, carefully engineered prompt sent to Groq/LLaMA, asking it to return a specific JSON structure with sentiment scores, pain points, niche communities, etc.
+
+This is NOT a weakness — it's actually the RIGHT engineering call for a hackathon-to-production timeline (training a custom sentiment model would take way longer and likely perform worse than a good LLM prompt). But you need to say this correctly in an interview: "Sentiment analysis and insight extraction is LLM-driven — I engineered structured prompts that ask Groq's LLaMA model to analyze the cleaned Reddit data and return quantified sentiment scores, pain points, and emotional triggers in a strict JSON schema, rather than using a separate trained NLP model." If you say "I built a custom sentiment analysis pipeline" without qualifying it, and they ask "which model, what accuracy metric, how'd you validate it," you'll get caught. Say it exactly like above and you're golden. 👌
+
+Step 7: Parse and return 📦
+
+The Groq response comes back, gets JSON-parsed (with a try/catch since LLMs sometimes return malformed JSON), sources get deduplicated with [...new Set(allSources)], and everything ships back to the frontend.
+
+4️⃣ Other platforms follow the SAME shape, with variations
+
+I checked youtubeAnalytics.ts too — same overall pattern (fetch → filter → LLM analysis), but it uses Zod schemas to validate YouTube API responses at runtime (stronger type-safety than Reddit's manual TypeScript interfaces), and uses axios instead of raw fetch. Worth knowing: not every file uses the exact same tools (fetch vs axios, Zod vs manual interfaces) — if asked "was your codebase consistent," the honest answer is "the core pattern was consistent, but different platforms used different HTTP/validation libraries depending on what fit each API best."
+
+5️⃣ The Snapshot/Save Feature — a nice touch 📸
+
+File: app/api/main/save.ts
+
+When a user hits "save," this doesn't just save the raw JSON — it literally renders the current results DOM into a standalone HTML file, converts all the images shown into base64 (so the snapshot works even if original image URLs die later), wraps it in styled HTML, uploads it to Supabase Storage, and logs an entry in a search_history table with a public URL. So users get a shareable, self-contained report of their search — smart feature, and a good one to mention as "polish" work.
+
+6️⃣ Auth Flow 🔐
+
+lib/supabase.ts sets up the Supabase client with PKCE flow (more secure OAuth flow for browser apps). In page.tsx, handleSignIn() calls supabase.auth.signInWithOAuth({ provider: 'google' }) — so login is Google OAuth via Supabase, not a custom-built auth system. Good to know: you didn't build auth from scratch, you used Supabase's built-in OAuth — that's a normal, smart choice, not something to hide, just something to state accurately if asked.
+
+🎤 Your "walk me through the architecture" interview answer (say something like this)
+
+"PeeKaboo takes one user query and uses an LLM to rewrite it into platform-optimized queries for up to 9 different sources — Reddit, YouTube, Quora, Twitter, Google, PlayStore, Facebook Ads, and more. For each active platform, we fetch raw data through that platform's API, run it through a relevance-scoring and quality filter to cut out noise, then send the cleaned data to Groq's LLaMA model with a structured prompt to extract sentiment, pain points, and marketing insights as JSON. We also built a config-driven model management system in Supabase so we could swap which LLM model powers each pipeline without redeploying, plus a snapshot feature that saves a full report as a standalone HTML file."
+
+That answer alone puts you ahead of most candidates because it shows SYSTEM thinking, not just a feature list.
+
+🏗️ Architecture Questions
+
+Walk me through the architecture end to end.
+"User logs in via Google OAuth through Supabase. They submit one query, which gets sent to Groq's LLaMA model to be rewritten into up to 9 platform-optimized queries — one each for Reddit, YouTube, Quora, Twitter, Google, PlayStore, Facebook Ads, image search, and strategic analysis. The user toggles which platforms to activate, and each active platform independently fetches raw data through its API, filters it for quality and relevance, then sends the cleaned data to Groq again with a structured prompt to extract sentiment, pain points, and marketing insights as JSON. Results render in a dashboard, and users can save a snapshot as a standalone HTML report stored in Supabase Storage."
+
+Why rewrite the query into 9 versions instead of using the same one everywhere?
+"Different platforms need different query shapes to return good results — Quora needs a question format, Reddit search works better with terms like 'issues' or 'experience' added, PlayStore only wants app names, not full sentences. Using one generic query across all of them would give noisy, irrelevant results on most platforms."
+
+Why Next.js over React + Express?
+"Next.js gives us API routes and the frontend in a single codebase — no separate backend server to deploy and manage. For a small team building fast, that's less infra overhead, plus built-in optimizations like image handling and easy Vercel deployment."
+
+Why Supabase over Firebase?
+"Supabase gives a proper relational Postgres database instead of Firestore's NoSQL model, which fits well when you want structured relationships — like search_history tied to a user_id with normal SQL querying. It also bundles Auth and file Storage in the same platform, so we didn't need to stitch together multiple services."
+
+Monolith or decoupled platform integrations?
+"Each platform (Reddit, YouTube, Quora, etc.) has its own independent API route file — they don't call each other and can fail independently. So if Reddit's API is down, YouTube and Quora results still come through fine. It's a monolithic deployment, but the integrations themselves are decoupled."
+
+🔍 Data Fetching / Scraping Questions
+
+APIs or scraping?
+"Official APIs where available — Reddit's OAuth API, YouTube Data API. We're not doing raw HTML scraping, which means fewer breakages from layout changes and cleaner structured data."
+
+What if Reddit rate-limits mid-request?
+"The Reddit auth function has retry logic with exponential backoff — it retries up to 3 times, waiting 2, then 4, then 8 seconds between attempts before giving up."
+
+What if a platform's response structure changes?
+"Honestly, that's a real risk — the code does have some defensive checks, like handling multiple possible Reddit response shapes, but a big structural change on their end could break parsing. This is one of the fragile points I'd flag as technical debt."
+
+How do you avoid NSFW/spam/low quality content?
+"There's a quality gate before anything reaches the LLM — it filters out stickied or locked posts, NSFW-flagged content, heavily downvoted posts, and posts with barely any engagement, like fewer than 2 comments."
+
+Walk me through the relevance scoring algorithm.
+"Query terms found in the post title score highest, especially near the start. Terms found in the body content add points too, capped so one term repeated 50 times doesn't dominate. Terms matching the subreddit name add a smaller boost. On top of that, there's an engagement score using a log scale of the post's score and comment count — log scale so a viral post with 10,000 upvotes doesn't completely drown out smaller but genuinely relevant discussions."
+
+Why cap at top 10 posts?
+"Balancing insight quality against LLM token cost and response time — processing every result would blow up both the Groq API bill and response latency for not much extra insight value, since posts past the top 15 by relevance score tend to be much less useful anyway."
+
+🤖 AI / LLM Integration Questions
+
+Is sentiment analysis a trained model or something else?
+"It's LLM-driven, not a separate trained sentiment classifier. We send the cleaned, filtered post and comment data to Groq's LLaMA model with a structured prompt asking it to return sentiment scores, pain points, and emotional triggers in a strict JSON schema — rather than running the text through something like a fine-tuned BERT model or a rules-based sentiment library."
+
+Why Groq/LLaMA over OpenAI GPT?
+"Groq's main advantage is inference speed — their custom hardware serves LLaMA models extremely fast compared to typical API latency, which matters a lot when you're making several LLM calls per search across multiple platforms in near real-time." (This is a genuinely fair, factual answer about why teams choose Groq — you can say this confidently.)
+
+How do you ensure valid, parseable JSON from the LLM every time?
+"Two layers — the prompt explicitly requests response_format: json_object with Groq's API, which constrains the model's output to valid JSON, and the code also wraps the parsing in a try/catch with a regex fallback that strips markdown code fences in case the model wraps its JSON in backticks anyway."
+
+What if the LLM doesn't return valid JSON?
+"It's caught, logged, and returns a clear error response rather than crashing or returning garbage to the user."
+
+Temperature settings?
+"Query generation uses a low temperature, around 0.1, because we want consistent, predictable query rewrites, not creative variation. The analysis step uses a slightly higher temperature, around 0.3, giving the model a bit more room to synthesize nuanced insights while still staying mostly deterministic."
+
+Could the LLM hallucinate pain points that aren't really there?
+"Yes, that's a real risk with any LLM-based analysis — we mitigate it partially by requiring the model to cite source URLs for its findings, so insights are at least traceable back to specific posts, but we don't have a separate verification step confirming the LLM's claims against the raw text." (Good honest answer — shows awareness of a real limitation.)
+
+Why build a system to dynamically swap the LLM model per feature?
+"So we could tune cost vs quality per feature without redeploying — for example, using a smaller, faster model for simple query rewriting, and a larger model for the more nuanced sentiment analysis, and adjust that from a database config rather than changing code."
+
+Fallback if Groq is down?
+"Currently the code returns an error response to the user rather than a) queuing for retry or b) falling back to a secondary provider — that's a gap I'd flag as an area for improvement."
+
+🗄️ Database / Backend Questions
+
+What's your schema?
+"Two main tables I can speak to: api_models, which stores which LLM model powers each feature — columns like api_name and model_name — and search_history, which logs each user's past searches with the query, the specialized queries generated, which platforms were active, and a URL to their saved snapshot."
+
+Why cache the model lookup instead of querying every time?
+"Every search could trigger several Groq calls, and each one checking Supabase first would add unnecessary DB round-trips and latency. A short in-memory cache avoids that."
+
+Why 5 minutes specifically?
+"It's a balance — long enough to meaningfully cut down repeated DB calls during active usage, short enough that if someone updates the model config, it takes effect fairly quickly without needing a restart." (Honest framing — this is a reasonable default, not some deeply calculated number, and it's fine to say that.)
+
+Row Level Security — is user data isolated?
+⚠️ This one I genuinely can't answer for you — RLS is configured in the Supabase dashboard, not visible in this codebase. You need to actually check this, because if RLS isn't enabled on search_history, any authenticated user could potentially read everyone else's search history through the anon key. This is worth verifying before your interview — I'll walk you through how to check if you want.
+
+🔐 Auth / Security Questions
+
+How does login work?
+"Google OAuth through Supabase Auth, using the PKCE flow — Proof Key for Code Exchange — which is the more secure OAuth flow recommended for browser-based apps, since it protects against authorization code interception attacks compared to the older implicit flow."
+
+Are API keys exposed to the client?
+⚠️ This is a real, honest flag, not a made-up flaw: several API keys in the code are prefixed with NEXT_PUBLIC_ — the Groq key, Reddit client ID/secret, Supabase anon key. In Next.js, anything prefixed NEXT_PUBLIC_ gets bundled into the CLIENT-side JavaScript, meaning it's visible in the browser. The Supabase anon key is designed to be public (that's normal, RLS is supposed to protect the data behind it). But the Groq API key and Reddit client secret being NEXT_PUBLIC_ is a real security concern — anyone could extract those from the browser bundle and burn through your API quota or impersonate your app. If asked, be straight: "That's actually something I'd flag as a real issue in this codebase — several third-party API keys are exposed client-side rather than being called through a server-only route, which is a security gap I'd prioritize fixing." This is a GREAT answer because it shows you can critically evaluate code, even your own team's.
+
+⚡ Performance / Scalability Questions
+
+What breaks first with 1000 concurrent users?
+"Almost certainly the Groq API rate limits and cost, since every search triggers multiple LLM calls — one for query generation plus one per active platform for analysis. Reddit and YouTube's own API rate limits would be the next bottleneck."
+
+Why Promise.all() for parallel comment fetching?
+"Fetching comments for 10 posts sequentially would mean 10 round-trip network calls stacked one after another. Running them in parallel with Promise.all cuts that down to roughly the time of the single slowest request instead of the sum of all of them."
+
+How would you reduce LLM costs at scale?
+"A caching layer for identical or near-identical queries within a time window, so repeated searches don't re-trigger the full pipeline; possibly a smaller/cheaper model for simpler platforms and reserving the larger model for the most complex analysis."
+
+Base64 images in snapshot HTML — doesn't that get huge?
+"Yes, that's a real limitation — base64 encoding inflates file size roughly 33% over the original, and embedding many images directly in one HTML file could get unwieldy for image-heavy searches. Storing images separately in Supabase Storage and linking to them would scale better."
+
+🐛 Error Handling / Edge Cases
+
+Zero relevant results from a platform?
+"Returns a clear 404-style error message suggesting broader search terms, rather than silently returning empty or crashing."
+
+LLM timeout or malformed JSON?
+"Wrapped in try/catch — parse failures are logged and return an error response to the frontend instead of showing broken data."
+
+Deleted/removed comments?
+"Filtered out explicitly — the code checks comment bodies for '[deleted]' and '[removed]' markers and excludes them before sending anything to the LLM."
+
+📊 Metrics Questions — ⚠️ where I need YOUR input
+
+I can't respond for these because they're claims about real-world measurement that only your team can verify:
+
+How was the 70% research time reduction actually measured? Was it the marketing team timing themselves before/after? A stated estimate from Level Supermind? Roughly how many campaigns/searches was that based on?
+How many people at Level Supermind actually used this?
+Did you get direct feedback — what specifically did they say was useful?
+
+If you genuinely don't know the exact methodology (since you didn't build it), the SAFEST honest answer is: "That figure came from the team's assessment comparing manual research time on Reddit/Twitter/YouTube per campaign versus using PeeKaboo — I'd want to verify the exact methodology with my teammate before quoting a precise number, but directionally the tool significantly cut down manual cross-platform searching." That's honest AND doesn't overclaim precision you don't have.
+
+👥 Personal Contribution Questions — ⚠️ needs your real answer
+
+I genuinely cannot fill these in without you telling me the truth:
+
+What did YOU specifically build, even if small — did you touch any of these files? Frontend components? One platform integration? Testing/QA? Prompt writing for one of the analysis prompts?
+If your honest answer is "I contributed to X and Y, my teammate Om built most of the core pipeline" — that's a COMPLETELY fine thing to say in an interview. Interviewers respect honesty about team dynamics way more than a shaky solo-hero story that falls apart under one follow-up question.
+
+What's your honest answer here, bro? Even "I mostly worked on the frontend dashboard and helped test/debug the Reddit and YouTube integrations" is a real, defensible answer I can build out properly with you.
+
+🔧 "What Would You Improve" — fully answerable, here's a strong version
+
+"Three things: first, move the exposed API keys server-side only instead of NEXT_PUBLIC_ — that's a real security gap. Second, add a caching layer so identical searches don't re-trigger the full scrape-and-LLM pipeline every time, which would cut both cost and latency. Third, verify and tighten Row Level Security on Supabase so user search history is properly isolated per user."
+
+That's a strong, honest, technically grounded answer using real gaps I can see in the actual code — way better than a vague "I'd add more features" answer.
+
+💣 The Trap Questions
+
+"Walk me through the exact sentiment score formula."
+"There isn't a hand-built formula — sentiment scoring is generated by the LLM based on a structured prompt, not a mathematical model we designed ourselves." Own this directly, don't dodge it.
+
+"Show me a specific bug you fixed."
+⚠️ I need a REAL one from you — did you personally hit and fix any bug, even small (a UI glitch, a broken toggle, an API key not loading)? Tell me and I'll help you frame it well. If you truly didn't debug anything yourself, better to have a smaller, honest story ready ("I mainly tested the platform integrations and reported edge cases where Reddit returned empty results, which the team then handled with better error messaging") than to fake a big one.
+
+"Same query twice, same results?"
+"Not necessarily identical — live API data changes between searches, and the LLM has some temperature, meaning slight variation in generated insights even on identical input. That's a real limitation of this kind of pipeline."
