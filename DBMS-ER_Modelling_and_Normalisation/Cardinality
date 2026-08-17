@@ -1,0 +1,108 @@
+🎯 What Cardinality Actually Means
+
+Cardinality answers ONE question: "For each instance of Entity A, how MANY instances of Entity B can it be linked to — and vice versa?" That's it. Three main flavors, let's break each down properly.
+
+1️⃣ One-to-One (1:1) — "Exclusive Pairing" 💍
+
+The rule: ONE record in Entity A relates to EXACTLY ONE record in Entity B, and vice versa. No sharing.
+
+Real-world examples (multiple, so it really sinks in):
+
+🪪 Person ↔ Passport — one person has one passport, one passport belongs to one person
+🔑 Employee ↔ ParkingSpot (in a company with assigned parking) — one employee, one specific spot
+🎓 Student ↔ StudentIDCard — one student, one ID card
+
+Why this is actually the RAREST relationship in real systems: Most "1:1-feeling" relationships could just be merged into ONE table. So WHY split them at all? Two real reasons interviewers want to hear:
+
+Security/access separation — e.g., User table (username, email — accessed often) vs UserSensitiveInfo table (SSN, bank details — accessed rarely, extra security layer). Splitting lets you apply different access controls.
+Performance — if Employee has a huge ProfilePicture BLOB field, splitting it into a separate EmployeePhoto table keeps the main Employee table lightweight and FAST to query when you don't need photos.
+
+How it's implemented in SQL:
+
+sql
+CREATE TABLE Person (
+    person_id INT PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+CREATE TABLE Passport (
+    passport_id INT PRIMARY KEY,
+    person_id INT UNIQUE,  -- 👈 UNIQUE is the key! Ensures 1:1, not 1:N
+    passport_number VARCHAR(20),
+    FOREIGN KEY (person_id) REFERENCES Person(person_id)
+);
+
+The trick that makes it 1:1 instead of 1:N: that UNIQUE constraint on the foreign key! Without UNIQUE, person_id could repeat across multiple passport rows (accidentally becoming 1:N). WITH UNIQUE, each person_id can appear AT MOST once in Passport — enforcing true 1:1 at the database level. 🔒 This is a genuine trap interviewers set — many people forget this detail.
+
+2️⃣ One-to-Many (1:N) — "The Most Common One" 📚
+
+The rule: ONE record in Entity A can relate to MANY records in Entity B, but each record in B relates back to only ONE record in A.
+
+Real-world examples:
+
+🧑‍🏫 Professor ↔ Courses — one professor teaches many courses, but each course (in a simple model) has one professor
+🏦 Customer ↔ BankAccounts — one customer can have multiple accounts (savings, current), but each account belongs to exactly one customer
+📁 Department ↔ Employees — one department has many employees, each employee belongs to one department
+🛒 Customer ↔ Orders — one customer places many orders, each order belongs to one customer
+
+How it's implemented in SQL: the foreign key goes on the "MANY" side.
+
+sql
+CREATE TABLE Professor (
+    professor_id INT PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+CREATE TABLE Course (
+    course_id INT PRIMARY KEY,
+    course_name VARCHAR(100),
+    professor_id INT,  -- 👈 foreign key lives on the "many" side (Course)
+    FOREIGN KEY (professor_id) REFERENCES Professor(professor_id)
+);
+
+Notice: NO UNIQUE constraint here — professor_id CAN repeat across multiple course rows (since one professor teaches many courses). That absence of UNIQUE is literally the only structural difference from the 1:1 example above! 🔑
+
+🎤 Memory trick: the foreign key ALWAYS sits on the "many" side, pointing back to the "one" side. Think: "many things point to one thing" — like many arrows pointing at a single target 🎯
+
+3️⃣ Many-to-Many (N:M) — "Everybody's Connected to Everybody" 🕸️
+
+The rule: MANY records in Entity A can relate to MANY records in Entity B, and vice versa.
+
+Real-world examples:
+
+🎓 Student ↔ Course — one student takes many courses, one course has many students
+🎬 Actor ↔ Movie — one actor appears in many movies, one movie has many actors
+🏷️ Product ↔ Tags (e-commerce) — one product can have many tags ("summer," "sale," "trending"), one tag applies to many products
+📚 Author ↔ Book — some books have multiple authors, and authors write multiple books
+
+⚠️ The critical thing: you CANNOT implement M:N directly with a simple foreign key like the previous two — there's no single place to PUT the foreign key, because BOTH sides can have multiple matches. You need a junction table (also called bridge/associative/linking table).
+
+How it's implemented in SQL:
+
+sql
+CREATE TABLE Student (
+    student_id INT PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+CREATE TABLE Course (
+    course_id INT PRIMARY KEY,
+    course_name VARCHAR(100)
+);
+
+-- 🌉 THE JUNCTION TABLE — this is what makes M:N actually work
+CREATE TABLE Enrollment (
+    student_id INT,
+    course_id INT,
+    enrollment_date DATE,
+    PRIMARY KEY (student_id, course_id),  -- 👈 composite primary key!
+    FOREIGN KEY (student_id) REFERENCES Student(student_id),
+    FOREIGN KEY (course_id) REFERENCES Course(course_id)
+);
+
+What's actually happening here: the Enrollment table breaks ONE many-to-many relationship into TWO one-to-many relationships:
+
+Student → Enrollment (one student, many enrollment rows) — that's 1:N
+Course → Enrollment (one course, many enrollment rows) — that's 1:N
+
+Put those two 1:N relationships together through the shared junction table, and you've EFFECTIVELY modeled M:N. 🤯 This is honestly one of THE most important patterns in relational database design — you'll use it constantly.
