@@ -1,0 +1,57 @@
+🎯 2NF — Super Simple Version
+
+First, forget the word "dependency" for a second. Let's just understand with ONE example.
+
+Imagine a table like this:
+
+StudentID	Subject	StudentName	Grade
+1	Math	Sangram	A
+1	Physics	Sangram	B
+2	Biology	Priya	A
+
+Look at this table. Notice "Sangram" is written TWICE. That's the problem we're going to fix. That's it. That's the whole issue in one sentence.
+
+🤔 Why is StudentID + Subject the "key" here?
+
+Just one row needs BOTH StudentID AND Subject together to be unique. Look — StudentID "1" appears twice. Subject "Math" could also repeat for other students. So only the COMBINATION (1, Math) or (1, Physics) is unique. That combination is called the primary key (the ID card of the row).
+
+🎯 Now the actual simple question 2NF asks:
+
+For every OTHER column (not the key), ask this ONE question:
+
+"Do I need BOTH StudentID AND Subject to know this value? Or does just ONE of them already tell me?"
+
+Let's check each column:
+
+Grade — do I need to know BOTH StudentID AND Subject to know the grade? YES. Sangram's grade in Math is different from his grade in Physics. So I need BOTH. ✅ This is fine, no problem here.
+
+StudentName — do I need to know the Subject to know the student's name? NO! I only need StudentID. Even without knowing "Math" or "Physics," I already know StudentID=1 is Sangram. ❌ This is the problem. StudentName only needs HALF the key (just StudentID), not the whole key.
+
+That's literally it. That's what "partial dependency" means — a column that only needs PART of the key, not the WHOLE key.
+
+🚨 Why is this actually bad? (real simple reason)
+
+Because "Sangram" gets written again and again for every subject he takes. If he studies 5 subjects, "Sangram" is typed 5 times in the table. That's just wasteful, and if he ever changes his name, you'd have to go fix it in 5 different places. Easy to miss one and mess up your data.
+
+✅ The Fix — Super Simple
+
+Just take "StudentName" OUT and put it in its own separate small table:
+
+Table 1 — just students and their names:
+
+StudentID	StudentName
+1	Sangram
+2	Priya
+
+Table 2 — just the subjects and grades:
+
+StudentID	Subject	Grade
+1	Math	A
+1	Physics	B
+2	Biology	A
+
+Now "Sangram" is written only ONCE. Done. That's the fix.
+
+🎤 The one-line answer to say in interview:
+
+"2NF means every column should depend on the WHOLE key, not just part of it. If a column only needs part of the key, take it out and put it in a separate table."
