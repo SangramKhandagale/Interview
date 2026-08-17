@@ -1,0 +1,75 @@
+🔗 What is a "Transitive Dependency"?
+
+A → B → C — where C depends on B, and B depends on A. So C indirectly (transitively) depends on A too, instead of depending on A directly.
+
+Rule of 3NF: Every non-key column must depend on the KEY, the WHOLE KEY, and NOTHING BUT the key. 🔑
+
+If a non-key column depends on ANOTHER non-key column instead of the actual primary key, that's a transitive dependency — and it needs to be removed.
+
+📊 Let's see the PROBLEM first (a table NOT in 3NF)
+StudentID | StudentName | DeptID | DeptName    | DeptHOD
+----------|-------------|--------|-------------|----------
+101       | Raj         | D1     | Computer Sci| Mr. Sharma
+102       | Priya       | D1     | Computer Sci| Mr. Sharma
+103       | Aman        | D2     | Mechanical  | Mr. Verma
+
+Primary Key: StudentID
+
+Now let's trace the dependency chain:
+
+StudentID → DeptID           (which dept the student belongs to)
+DeptID    → DeptName, DeptHOD (dept name/HOD depends on the DEPARTMENT, not the student!)
+
+So:
+
+StudentID → DeptID → DeptName, DeptHOD
+
+THIS is a transitive dependency! 🚨 DeptName and DeptHOD don't directly depend on StudentID (the primary key) — they depend on DeptID, which itself depends on StudentID. It's an indirect chain, not a direct relationship.
+
+🎬 Real-life analogy: A gossip chain 🗣️
+
+You ask Raj "who's dating who?" Raj doesn't know directly, but he asks Priya, who then tells him. So YOUR info about "who's dating who" indirectly came through Priya, not directly.
+
+That's transitive dependency — you're getting info through a MIDDLEMAN instead of the direct source.
+
+😱 Why is this a PROBLEM? (Real issues it causes)
+1. Update Anomaly 🔄
+
+If Mr. Sharma retires and a new HOD takes over Computer Sci dept, you'd have to update it in MULTIPLE rows (both Raj's row AND Priya's row). Miss one row → now your data is INCONSISTENT (says two different HODs for the same dept)! 😱
+
+2. Insertion Anomaly ➕
+
+What if you want to add a NEW department "Electrical" with HOD "Mr. Gupta," but there are NO students enrolled in it yet? You literally CAN'T insert this department info, because there's no StudentID to attach it to! The table structure forces department data to only exist through a student.
+
+3. Deletion Anomaly 🗑️
+
+If Aman (the ONLY student in Mechanical dept) drops out and you delete his row, you accidentally LOSE all info about the Mechanical department too (DeptName, DeptHOD) — even though the department itself still exists in real life! 💀
+
+✅ THE FIX — Split into separate tables (remove transitive dependency)
+
+Table 1: Students
+
+StudentID | StudentName | DeptID
+----------|-------------|--------
+101       | Raj         | D1
+102       | Priya       | D1
+103       | Aman        | D2
+
+Table 2: Departments
+
+DeptID | DeptName     | DeptHOD
+-------|--------------|----------
+D1     | Computer Sci | Mr. Sharma
+D2     | Mechanical   | Mr. Verma
+
+Now:
+
+DeptName and DeptHOD depend DIRECTLY on DeptID (their own proper key) ✅
+StudentID → DeptID is a direct, clean dependency ✅
+No more chain — no more transitive dependency! 🎉
+
+If you need combined info, you just JOIN these two tables when querying. Best of both worlds — no redundancy, but still fully connected data.
+
+🎬 Real-life analogy: Fixing the gossip chain 🗣️➡️✅
+
+Instead of Raj telling you gossip he heard FROM Priya (indirect/transitive), you just go DIRECTLY to Priya and ask her yourself. No middleman, no risk of the info getting distorted or outdated along the way. Direct source = reliable, single source of truth. ✅
