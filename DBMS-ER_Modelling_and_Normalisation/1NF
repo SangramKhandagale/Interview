@@ -1,0 +1,42 @@
+🎯 What Even IS Normalization? (quick context before 1NF specifically)
+
+Normalization = organizing your database tables to REDUCE redundancy (repeated data) and AVOID weird update/insert/delete problems. There are levels — 1NF, 2NF, 3NF, BCNF — each one FIXES a specific type of problem, building on the previous level. You literally CANNOT be in 2NF without first being in 1NF. Think of it like a video game — you can't unlock Level 2 without clearing Level 1. 🎮
+
+1️⃣ First Normal Form (1NF) — "One Value Per Box, No Cramming" 📦
+
+The rule, in plain English: Every column in a table must hold ONLY a single, atomic (indivisible) value — no lists, no multiple values crammed into one cell, no "repeating groups" of columns either.
+
+Real analogy: Imagine a form asking for your phone number, and instead of ONE box, you scribble "9876543210, 8765432109, 7654321098" ALL into that single box 📱. Now imagine someone trying to SEARCH "find everyone with phone number 8765432109" — good luck, that's buried inside a messy string with two other numbers. That's exactly the mess 1NF prevents.
+
+🚨 The Violation Example (this is what interviewers actually want to see)
+
+❌ BAD TABLE — violates 1NF:
+
+StudentID	Name	Subjects
+1	Sangram	Math, Physics, Chemistry
+2	Priya	Biology, English
+
+See the problem? 👀 The Subjects column has MULTIPLE values crammed into ONE cell — "Math, Physics, Chemistry" is NOT atomic, it's a hidden LIST pretending to be a single value. This is the classic 1NF violation.
+
+Why this is genuinely bad (not just "against the rules"):
+
+🔍 Can't search efficiently — "find all students studying Physics" requires ugly string-matching (LIKE '%Physics%') instead of a clean, indexed query
+➕ Can't easily add/remove one subject — you'd have to parse and rewrite the ENTIRE string just to add "Biology" to Sangram's list
+📊 Can't do proper aggregation — "count how many students take each subject" becomes a nightmare with comma-separated strings
+🧮 No data integrity — nothing stops someone from typing "Math,,Physics" or "math ; physics" — totally inconsistent formatting
+✅ The FIX — Making it 1NF-Compliant
+
+Option A: Split into separate rows (still one table)
+
+StudentID	Name	Subject
+1	Sangram	Math
+1	Sangram	Physics
+1	Sangram	Chemistry
+2	Priya	Biology
+2	Priya	English
+
+Now EVERY cell holds exactly ONE atomic value. ✅ But notice — Name "Sangram" is now repeated 3 times. That's a NEW kind of redundancy problem, which is exactly what 2NF will fix later (spoiler for Day 5 territory, but good to see the connection). 1NF alone doesn't solve EVERYTHING — it just guarantees atomic values.
+
+🎤 The Interview One-Liner
+
+"1NF requires every column to hold a single, atomic value — no comma-separated lists or multiple values crammed into one cell — and no repeating groups of columns like Subject1, Subject2, Subject3. The standard fix is to split repeating data into a separate table with one row per value, connected back via a foreign key, which is essentially how you'd model a one-to-many or many-to-many relationship."
