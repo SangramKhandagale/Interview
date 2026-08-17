@@ -1,0 +1,103 @@
+🧠 Quick Recap: What was 3NF's rule?
+
+Every non-key column must depend DIRECTLY on the key (no transitive dependencies through OTHER non-key columns).
+
+BCNF (Boyce-Codd Normal Form) tightens this rule even further:
+
+For EVERY functional dependency (A → B), A MUST be a super key. No exceptions — not even for prime attributes (columns that are PART of a candidate key)!
+
+This is the sneaky part 👀 — 3NF has a small "loophole" that lets certain dependencies slide IF the dependent column is part of a candidate key. BCNF closes that loophole completely.
+
+📊 The Classic Example — Student, Subject, Teacher
+StudentID | Subject   | Teacher
+----------|-----------|----------
+101       | Math      | Mr. Sharma
+101       | Physics   | Mr. Verma
+102       | Math      | Mr. Sharma
+102       | Physics   | Mr. Gupta
+103       | Math      | Mr. Sharma
+
+Business rules (given):
+
+A student can study MULTIPLE subjects ✅
+Each subject can be taught by MULTIPLE teachers (different students might get different teachers for the same subject — look at Physics: Priya has Mr. Verma, but the 102 student has Mr. Gupta!)
+BUT — each Teacher teaches only ONE subject (Mr. Sharma ONLY teaches Math, always)
+
+Functional Dependencies here:
+
+(StudentID, Subject) → Teacher     [who teaches this student this subject]
+Teacher → Subject                  [each teacher is tied to exactly ONE subject]
+🔑 Finding the Candidate Keys
+
+To identify a student's teacher for a subject, you need (StudentID, Subject) together → that's our primary candidate key.
+
+But wait — is there ANOTHER candidate key hiding here? 🤔
+
+Since Teacher → Subject (each teacher teaches only one fixed subject), and if we also know (StudentID, Teacher) — we could ALSO derive the Subject! So:
+
+(StudentID, Teacher) → Subject  ✅ (this ALSO uniquely determines rows)
+
+So we actually have TWO candidate keys:
+
+Candidate Key 1: (StudentID, Subject)
+Candidate Key 2: (StudentID, Teacher)
+✅ Why does this table PASS 3NF?
+
+3NF's rule: non-key attributes must depend directly on the key, UNLESS the dependent attribute is itself a prime attribute (part of SOME candidate key).
+
+Look at our tricky dependency: Teacher → Subject
+
+Is Subject a prime attribute? YES! ✅ (It's part of Candidate Key 1: (StudentID, Subject))
+
+3NF has an exception clause that says: "transitive dependency is only a violation if the dependent attribute is a NON-prime attribute." Since Subject IS prime (part of a candidate key), 3NF looks the other way and says "eh, this is fine, technically not a violation." 😌
+
+So this table PASSES 3NF — but something still feels off, right? 🤨
+
+❌ Why does this table FAIL BCNF?
+
+BCNF doesn't care about that "prime attribute" exception AT ALL. BCNF's rule is brutally simple:
+
+For EVERY dependency (A → B), A must be a super key. Period. No excuses.
+
+Let's check our dependency: Teacher → Subject
+
+Is Teacher alone a super key? ❌ NO! Look at the table — Teacher alone does NOT uniquely identify a row (Mr. Sharma appears in row 1, 3, AND 5). A super key must uniquely identify each row by itself, and Teacher alone clearly can't do that.
+
+Since the determinant (Teacher) is NOT a super key → BCNF VIOLATION! 🚨
+
+🎬 Real-life analogy: The "loophole" 3NF allows
+
+Imagine a company rule: "Every employee must badge in through the main entrance... UNLESS they're a manager, then they can use the side door." 🚪
+
+3NF is like this rule — it has a special exception for "important" (prime) attributes, letting certain dependencies slide through the side door.
+
+BCNF says: "NO. Everyone uses the main entrance. No exceptions, not even for managers." 👮 Stricter, no loopholes, no special treatment.
+
+✅ THE FIX — Decompose to remove the BCNF violation
+
+Since Teacher → Subject is the problematic dependency, we split it into its own table:
+
+Table 1: Teacher_Subject (captures the fixed teacher-subject relationship)
+
+Teacher      | Subject
+-------------|----------
+Mr. Sharma   | Math
+Mr. Verma    | Physics
+Mr. Gupta    | Physics
+
+Table 2: Student_Teacher (captures which student has which teacher)
+
+StudentID | Teacher
+----------|----------
+101       | Mr. Sharma
+101       | Mr. Verma
+102       | Mr. Sharma
+102       | Mr. Gupta
+103       | Mr. Sharma
+
+Now check:
+
+In Table 1: Teacher → Subject, and Teacher IS the key here (unique per row) ✅ Super key satisfied!
+In Table 2: (StudentID, Teacher) together form the key, no partial/transitive dependency issues ✅
+
+Both tables now satisfy BCNF — every determinant is a proper super key. 🎉
