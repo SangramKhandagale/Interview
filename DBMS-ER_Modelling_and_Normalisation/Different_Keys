@@ -1,0 +1,108 @@
+🧠 First — think of it as a family hierarchy of keys
+        Super Key (the big umbrella - everyone's in here)
+              ↓
+        Candidate Key (the "eligible" shortlist)
+              ↓
+        Primary Key (the ONE chosen winner)
+
+Composite Key = a key made of MULTIPLE columns (can apply to any of the above)
+Foreign Key = a completely different beast — it's a LINK to another table
+
+Let's go one by one 👇
+
+1️⃣ Super Key — "ANY combo of columns that uniquely identifies a row"
+
+"Give me literally ANYTHING (even overkill) that can uniquely point to one specific row."
+
+A super key is any set of columns (one or more) that can uniquely identify a row — even if it includes EXTRA, unnecessary columns.
+
+Table: Students
+StudentID | Email              | Phone       | Name
+----------|--------------------|-----------  |------
+101       | raj@gmail.com      | 9876543210  | Raj
+
+ALL of these are valid Super Keys (all uniquely identify the row):
+
+{StudentID}                          ✅
+{StudentID, Email}                   ✅ (has extra, but still unique)
+{StudentID, Email, Phone, Name}      ✅ (everything included, still technically works)
+
+Analogy: 🎒 It's like ANY combination of ID proofs that can prove who you are — even if you overdo it and show your Aadhaar + Passport + Voter ID + PAN card all together, that's still "valid identification," just excessive.
+
+2️⃣ Candidate Key — "The MINIMAL super keys (no unnecessary extra columns)"
+
+"Give me the SMALLEST possible set of columns that can still uniquely identify a row — nothing wasteful."
+
+A candidate key is a super key with NO redundant columns — remove even ONE column and it stops being unique.
+
+From our table above:
+
+{StudentID}   ✅ Candidate Key (minimal, works alone)
+{Email}       ✅ Candidate Key (also minimal, works alone)
+{StudentID, Email}  ❌ NOT a candidate key (StudentID alone was already enough — Email here is redundant)
+
+There can be MULTIPLE candidate keys in one table — they're all "eligible" to become the main key.
+
+Analogy: 🎫 Both your Aadhaar card ALONE and your Passport ALONE can each independently prove your identity. You don't need both together — each one BY ITSELF is sufficient. Both are "candidates" for being your official ID.
+
+3️⃣ Primary Key — "The ONE candidate key we OFFICIALLY chose"
+
+"Out of all the eligible candidates, THIS is the one we're going with, officially, forever."
+
+Out of all the candidate keys available, you PICK ONE to be the official, permanent identifier for the table. That's the Primary Key.
+
+Candidate Keys: {StudentID}, {Email}
+→ We choose {StudentID} as the Primary Key ✅
+
+Rules: Must be unique, can NEVER be NULL, and there's only ONE Primary Key per table (even though there might be multiple candidate keys available).
+
+Analogy: 👑 You had multiple "eligible" ID proofs (Aadhaar, Passport, PAN), but your college specifically says "we will ONLY use your Aadhaar number as your OFFICIAL student ID in our system." That's now THE chosen one — the Primary Key.
+
+4️⃣ Composite Key — "A key made of MULTIPLE columns combined"
+
+"No SINGLE column is enough alone — we NEED two or more columns TOGETHER to uniquely identify a row."
+
+This isn't a separate "type" like the others — it's more like a special CASE where a key (candidate/primary) needs more than one column.
+
+Table: Enrollments
+StudentID | CourseID | Grade
+----------|----------|-------
+101       | C1       | A
+101       | C2       | B
+102       | C1       | A
+
+Neither StudentID alone NOR CourseID alone is unique (StudentID 101 appears twice, CourseID C1 appears twice). But TOGETHER, (StudentID, CourseID) uniquely identifies each row.
+
+Primary Key = (StudentID, CourseID)  ← Composite Key! Two columns combined 🔗
+
+Analogy: 🎬 Like a movie seat — "Seat A5" alone isn't enough (every theater has an A5), and "Screen 3" alone isn't enough either (many seats in Screen 3). But "Screen 3, Seat A5" TOGETHER uniquely identifies exactly one specific seat. 🎟️
+
+5️⃣ Foreign Key — "A link/reference pointing to ANOTHER table's primary key"
+
+"This column isn't identifying MY row — it's pointing OVER to identify a row in a DIFFERENT table."
+
+Completely different purpose from the other 4! A Foreign Key creates a relationship/link between two tables by referencing another table's Primary Key.
+
+Table: Departments
+DeptID | DeptName
+-------|----------
+D1     | Computer Sci
+D2     | Mechanical
+
+Table: Students
+StudentID | Name  | DeptID  ← this is a FOREIGN KEY (points to Departments.DeptID)
+----------|-------|--------
+101       | Raj   | D1
+102       | Priya | D2
+
+DeptID in the Students table isn't identifying a STUDENT — it's REFERENCING which department (a row in a DIFFERENT table) that student belongs to.
+
+Analogy: 🔗 Like writing your father's Aadhaar number on YOUR school admission form. It's not YOUR identifier — it's a pointer/reference connecting your record to HIS record in a different "table" (family database). Creates a relationship between two separate entities.
+
+📊 Full Comparison Table
+Key Type	What it means	Uniqueness	Can be NULL?	How many per table?
+Super Key	ANY combo of columns that's unique (even with extra cols)	✅ Unique	Depends	Many (lots of combos)
+Candidate Key	MINIMAL super key (no redundant columns)	✅ Unique	Usually No	Can be multiple
+Primary Key	The ONE candidate key officially chosen	✅ Unique	❌ Never NULL	Exactly ONE
+Composite Key	A key (any type) made of 2+ columns combined	✅ Unique together	Depends	N/A — it's a property, not separate type
+Foreign Key	Points to ANOTHER table's Primary Key (relationship)	❌ Not necessarily unique	✅ Can be NULL	Can be multiple
